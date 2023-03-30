@@ -11,7 +11,7 @@ def intersection_over_union(pred_bbox, label_bbox, bbox_format='midpoint'):
         bbox_format (str): midpoint (x, y, w, h) or corner (x1, y1, x2, y2)
 
     Return:
-        tensor: Intersection over union for all example
+        (tensor): Intersection over union for all example
     '''
     # Change the midpoint format to corner format
     if bbox_format == 'midpoint':
