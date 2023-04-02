@@ -13,6 +13,7 @@ def non_max_suppression(bboxes, iou_thershold, prob_thershold, bbox_format='corn
             5: (probability of object class (1), bounding boxes (4))
         iou_thershold (int/float): Value for Measurement the Similarity between Bounding Boxes
         prob_thershold (float [0, 1]): Probabilty Thershold
+        bbox_format (str): midpoint (x, y, w, h) or corner (x1, y1, x2, y2)
 
     Return:
         D (list[tensor]): List of Cleaning Bounding Boxes
