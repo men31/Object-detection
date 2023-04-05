@@ -18,7 +18,7 @@ class VOCDataset(torch.utils.data.Dataset):
         
     def __getitem__(self, index):
         # Image implementation
-        img_path = os.path.join(self.img_dir, self.annotations[index, 0])
+        img_path = os.path.join(self.img_dir, self.annotations.iloc[index, 0])
         image = Image.open(img_path)
 
         # Bounding boxes implementation

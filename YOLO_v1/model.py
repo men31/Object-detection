@@ -61,9 +61,8 @@ class Yolov1(torch.nn.Module):
 
 def test(S=7, B=2, C=20):
     model = Yolov1(split_size=S, num_boxes=B, num_classes=C)
-    print('Model: \n', model)
     x = torch.rand((2, 448, 448, 3)).permute(0, 3, 1, 2) # torch (batch_size, channel, height, width)
-    print(model(x).shape) # x was passed through the forward function
+    # print(model(x).shape) # x was passed through the forward function
 
 
 if __name__ == '__main__':

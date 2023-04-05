@@ -37,22 +37,6 @@ class Compose(object):
     
 transform = Compose([transform.Resize((448, 448)), transform.ToTensor(), ])
 
-def train_fn(train_loader, model, optimizer, loss_fn):
-    loop = tqdm(train_loader, leave=True)
-    mean_loss = []
-
-    for batch_idx, (x, y) in enumerate(loop):
-        x, y = x.to(DEVICE), y.to(DEVICE)
-        out = model(x)
-        loss = loss_fn(out, y)
-        mean_loss.append(loss.item())
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-
-        loop.set_postfix(loss = loss.item())
-    print(f'Mean loss was {sum(mean_loss)/len(mean_loss)}')
-
 def main():
     model = Yolov1(split_size=7, num_boxes=2, num_classes=20).to(DEVICE)
     optimizer = optim.Adam(model.parameters(), lr=LEANING_RATE, weight_decay=WEIGHT_DECAY)
@@ -70,7 +54,7 @@ def main():
     )
 
     test_dataset = VOCDataset(
-        "data/test.csv", # can be modified
+        "data/test.csv", # can be modified  
         transform=transform, img_dir=IMG_DIR, label_dir=LABEL_DIR,
     )
 
@@ -91,38 +75,53 @@ def main():
         shuffle=True,
         drop_last=True,
     )
+
+    state_dict = torch.load(LOAD_MODEL_FILE)
+    model.load_state_dict(state_dict['state_dict'])
+    optimizer.load_state_dict(state_dict['optimizer'])
+
+    for x, y in test_loader:
+           x = x.to(DEVICE)
+           
+           for idx in range(2):
+            #    print(y[idx].shape)
+               bboxes = cellboxes_to_boxes(model(x))
+               bboxes = non_max_suppression(bboxes[idx], iou_threshold=0.5, threshold=0.4, box_format="midpoint")
+               plot_image(x[idx].permute(1,2,0).to("cpu"), bboxes)
+
+           import sys
+           sys.exit()
+
         
-    for epoch in range(EPOCHS):
-        # for x, y in train_loader:
-        #    x = x.to(DEVICE)
-        #    for idx in range(8):
-        #        bboxes = cellboxes_to_boxes(model(x))
-        #        bboxes = non_max_suppression(bboxes[idx], iou_threshold=0.5, threshold=0.4, box_format="midpoint")
-        #        plot_image(x[idx].permute(1,2,0).to("cpu"), bboxes)
+    # for epoch in range(EPOCHS):
+    #     # for x, y in train_loader:
+    #     #    x = x.to(DEVICE)
+    #     #    for idx in range(8):
+    #     #        bboxes = cellboxes_to_boxes(model(x))
+    #     #        bboxes = non_max_suppression(bboxes[idx], iou_threshold=0.5, threshold=0.4, box_format="midpoint")
+    #     #        plot_image(x[idx].permute(1,2,0).to("cpu"), bboxes)
 
-        #    import sys
-        #    sys.exit()
+    #     #    import sys
+    #     #    sys.exit()
 
-        pred_boxes, target_boxes = get_bboxes(
-            train_loader, model, iou_threshold=0.5, threshold=0.4
-        )
 
-        mean_avg_prec = mean_average_precision(
-            pred_boxes, target_boxes, iou_threshold=0.5, box_format="midpoint"
-        )
-        print(f"Train mAP: {mean_avg_prec}")
+    #     pred_boxes, target_boxes = get_bboxes(
+    #         train_loader, model, iou_threshold=0.5, threshold=0.4
+    #     )
 
-        if mean_avg_prec > 0.9:
-           checkpoint = {
-               "state_dict": model.state_dict(),
-               "optimizer": optimizer.state_dict(),
-           }
-           save_checkpoint(checkpoint, filename=LOAD_MODEL_FILE)
-           import time
-           time.sleep(1)
-           break
+    #     mean_avg_prec = mean_average_precision(
+    #         pred_boxes, target_boxes, iou_threshold=0.5, box_format="midpoint"
+    #     )
+    #     print(f"Train mAP: {mean_avg_prec}")
 
-        train_fn(train_loader, model, optimizer, loss_fn)
+    #     if mean_avg_prec > 0.9:
+    #        checkpoint = {
+    #            "state_dict": model.state_dict(),
+    #            "optimizer": optimizer.state_dict(),
+    #        }
+    #        save_checkpoint(checkpoint, filename=LOAD_MODEL_FILE)
+    #        import time
+    #        time.sleep(10)
 
 if __name__ == "__main__":
     main()
